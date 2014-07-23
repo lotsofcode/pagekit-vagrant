@@ -42,4 +42,26 @@ class apache
         'echo "ServerName localhost" | sudo tee /etc/apache2/conf-enabled/fqdn.conf':
             require => Package['apache2'],
     }
+
+    # Change user
+    exec { "ApacheUserChange" :
+        command => "sed -i 's/APACHE_RUN_USER=www-data/APACHE_RUN_USER=vagrant/' /etc/apache2/envvars",
+        onlyif  => "grep -c 'APACHE_RUN_USER=www-data' /etc/apache2/envvars",
+        require => Package["apache2"],
+        notify  => Service["apache2"],
+    }
+
+    # Change group
+    exec { "ApacheGroupChange" :
+        command => "sed -i 's/APACHE_RUN_GROUP=www-data/APACHE_RUN_GROUP=vagrant/' /etc/apache2/envvars",
+        onlyif  => "grep -c 'APACHE_RUN_GROUP=www-data' /etc/apache2/envvars",
+        require => Package["apache2"],
+        notify  => Service["apache2"],
+    }
+
+    exec { "apache_lockfile_permissions" :
+        command => "chown -R vagrant:www-data /var/lock/apache2",
+        require => Package["apache2"],
+        notify  => Service["apache2"],
+    }
 }
